@@ -15,7 +15,8 @@ import {
   Alert,
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
-import { LocalizationProvider, DateCalendar } from '@mui/x-date-pickers';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { DateCalendar } from '@mui/x-date-pickers/DateCalendar';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import sv from 'date-fns/locale/sv';
 

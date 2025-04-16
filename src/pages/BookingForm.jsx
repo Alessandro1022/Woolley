@@ -18,19 +18,19 @@ import { useAuth } from '../contexts/AuthContext';
 const StyledPaper = styled(Paper)(({ theme }) => ({
   padding: theme.spacing(4),
   marginTop: theme.spacing(4),
-  background: 'linear-gradient(135deg, #FFFFFF 0%, #FDF6E3 100%)',
+  backgroundColor: '#FFFFFF',
   border: '1px solid #D4AF37',
   borderRadius: 16,
-  boxShadow: '0 4px 8px rgba(212, 175, 55, 0.15)',
+  boxShadow: 'none',
 }));
 
 const StyledButton = styled(Button)(({ theme }) => ({
-  background: 'linear-gradient(45deg, #D4AF37 30%, #B38B2D 90%)',
-  boxShadow: '0 3px 5px 2px rgba(212, 175, 55, .3)',
+  backgroundColor: '#D4AF37',
   color: '#FFFFFF',
   padding: '10px 24px',
+  marginTop: theme.spacing(3),
   '&:hover': {
-    background: 'linear-gradient(45deg, #B38B2D 30%, #D4AF37 90%)',
+    backgroundColor: '#B38B2D',
   },
 }));
 
@@ -138,7 +138,17 @@ const BookingForm = () => {
   return (
     <Container maxWidth="sm">
       <StyledPaper>
-        <Typography variant="h4" component="h1" gutterBottom sx={{ color: '#D4AF37', textAlign: 'center' }}>
+        <Typography 
+          variant="h4" 
+          component="h1" 
+          gutterBottom 
+          sx={{ 
+            color: '#D4AF37',
+            textAlign: 'center',
+            fontFamily: 'Playfair Display, serif',
+            fontWeight: 700
+          }}
+        >
           Boka tid
         </Typography>
 
@@ -179,7 +189,6 @@ const BookingForm = () => {
                 name="customerName"
                 value={formData.customerName}
                 onChange={handleChange}
-                disabled={!!user}
               />
             </Grid>
 
@@ -192,7 +201,6 @@ const BookingForm = () => {
                 value={formData.customerPhone}
                 onChange={handleChange}
                 placeholder="0701234567"
-                disabled={!!user}
               />
             </Grid>
 
