@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Typography, Container, Grid, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Button } from '@mui/material';
+import { Box, Typography, Container, Grid, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Button, IconButton, Alert } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import { format } from 'date-fns';
 import { sv } from 'date-fns/locale';
+import DeleteIcon from '@mui/icons-material/Delete';
 
 const StyledPaper = styled(Paper)(({ theme }) => ({
   padding: theme.spacing(4),
@@ -23,30 +24,43 @@ const StyledButton = styled(Button)(({ theme }) => ({
   },
 }));
 
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+
 const AdminDashboard = () => {
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     loadBookings();
-    window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
   }, []);
 
-  const loadBookings = () => {
+  const loadBookings = async () => {
     try {
-      const storedBookings = JSON.parse(localStorage.getItem('bookings') || '[]');
-      setBookings(storedBookings);
+      const response = await fetch(`${API_URL}/bookings`);
+      if (!response.ok) {
+        throw new Error('Kunde inte ladda bokningar');
+      }
+      const data = await response.json();
+      setBookings(data);
     } catch (err) {
-      console.error('Error loading bookings:', err);
+      setError(err.message);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleStorageChange = (e) => {
-    if (e.key === 'bookings') {
-      loadBookings();
+  const handleDelete = async (id) => {
+    try {
+      const response = await fetch(`${API_URL}/bookings/${id}`, {
+        method: 'DELETE',
+      });
+      if (!response.ok) {
+        throw new Error('Kunde inte ta bort bokningen');
+      }
+      setBookings(bookings.filter(booking => booking._id !== id));
+    } catch (err) {
+      setError(err.message);
     }
   };
 
@@ -85,6 +99,11 @@ const AdminDashboard = () => {
                 <Typography variant="h6" gutterBottom>
                   Bokningar
                 </Typography>
+                {error && (
+                  <Alert severity="error" sx={{ mb: 2 }}>
+                    {error}
+                  </Alert>
+                )}
                 {loading ? (
                   <Typography>Laddar bokningar...</Typography>
                 ) : bookings.length === 0 ? (
@@ -100,17 +119,26 @@ const AdminDashboard = () => {
                           <TableCell>Telefon</TableCell>
                           <TableCell>Tjänst</TableCell>
                           <TableCell>Status</TableCell>
+                          <TableCell>Åtgärd</TableCell>
                         </TableRow>
                       </TableHead>
                       <TableBody>
                         {bookings.map((booking) => (
-                          <TableRow key={booking.id}>
+                          <TableRow key={booking._id}>
                             <TableCell>{formatDate(booking.date)}</TableCell>
                             <TableCell>{booking.time}</TableCell>
                             <TableCell>{booking.customerName}</TableCell>
                             <TableCell>{booking.customerPhone}</TableCell>
                             <TableCell>{booking.service}</TableCell>
                             <TableCell>{booking.status}</TableCell>
+                            <TableCell>
+                              <IconButton 
+                                onClick={() => handleDelete(booking._id)}
+                                color="error"
+                              >
+                                <DeleteIcon />
+                              </IconButton>
+                            </TableCell>
                           </TableRow>
                         ))}
                       </TableBody>

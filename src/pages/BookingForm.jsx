@@ -51,6 +51,8 @@ const services = [
   }
 ];
 
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+
 const BookingForm = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -63,6 +65,7 @@ const BookingForm = () => {
     time: location.state?.time || null,
   });
   const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (!location.state?.date || !location.state?.time) {
@@ -81,57 +84,55 @@ const BookingForm = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError(null);
+    setLoading(true);
 
     // Validera telefonnummer
     const phoneRegex = /^[0-9]{10}$/;
     if (!phoneRegex.test(formData.customerPhone.replace(/\s/g, ''))) {
       setError('Vänligen ange ett giltigt telefonnummer (10 siffror)');
+      setLoading(false);
       return;
     }
 
     if (!formData.customerName.trim()) {
       setError('Vänligen ange ditt namn');
+      setLoading(false);
       return;
     }
 
     if (!formData.service) {
       setError('Vänligen välj en tjänst');
+      setLoading(false);
       return;
     }
 
     try {
-      // Kontrollera om tiden redan är bokad
-      const existingBookings = JSON.parse(localStorage.getItem('bookings') || '[]');
-      const isAlreadyBooked = existingBookings.some(booking => 
-        booking.date === format(new Date(formData.date), 'yyyy-MM-dd') && 
-        booking.time === formData.time
-      );
+      const response = await fetch(`${API_URL}/bookings`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          customerName: formData.customerName,
+          customerPhone: formData.customerPhone,
+          service: formData.service,
+          date: format(new Date(formData.date), 'yyyy-MM-dd'),
+          time: formData.time,
+          stylistId: location.state?.stylistId,
+        }),
+      });
 
-      if (isAlreadyBooked) {
-        setError('Tyvärr är denna tid redan bokad. Vänligen välj en annan tid.');
-        return;
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Ett fel uppstod vid bokningen');
       }
 
-      const newBooking = {
-        id: Date.now().toString(),
-        customerName: formData.customerName,
-        customerPhone: formData.customerPhone,
-        service: formData.service,
-        date: format(new Date(formData.date), 'yyyy-MM-dd'),
-        time: formData.time,
-        status: 'Bekräftad',
-        stylistId: location.state?.stylistId,
-        createdAt: new Date().toISOString()
-      };
-
-      // Spara bokningen i localStorage
-      const bookings = [...existingBookings, newBooking];
-      localStorage.setItem('bookings', JSON.stringify(bookings));
-
-      // Navigera till bekräftelsesidan
+      const newBooking = await response.json();
       navigate('/booking-confirmation', { state: { booking: newBooking } });
     } catch (error) {
-      setError('Ett fel uppstod vid bokningen. Vänligen försök igen.');
+      setError(error.message);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -243,8 +244,9 @@ const BookingForm = () => {
                 fullWidth
                 variant="contained"
                 sx={{ mt: 3 }}
+                disabled={loading}
               >
-                Boka
+                {loading ? 'Bokar...' : 'Boka'}
               </StyledButton>
             </Grid>
           </Grid>
