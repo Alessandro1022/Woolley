@@ -1,0 +1,17 @@
+services:
+  woolley-backend:
+    type: web
+    name: woolley-backend
+    env: node
+    rootDir: backend
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: MONGODB_URI
+        sync: false # Set in Render dashboard for security
+      - key: JWT_SECRET
+        sync: false # Set in Render dashboard for security
+      - key: FRONTEND_URL
+        sync: false # Set in Render dashboard for security
